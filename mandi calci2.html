@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agri-Trade Mobile Bill</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --primary: #2e7d32; --secondary: #1976d2; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #f0f2f5; margin: 0; display: flex; justify-content: center; padding: 15px;
+        }
+        .container { 
+            background: white; width: 100%; max-width: 400px; padding: 25px; 
+            border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 25px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
+        input { 
+            width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #eee; 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s;
+        }
+		select { 
+            width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #eee; 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus { border-color: var(--secondary); outline: none; }
+        .total-section { 
+            background: #e8f5e9; padding: 20px; border-radius: 10px; 
+            text-align: center; margin-bottom: 20px; 
+        }
+        #total-display { font-size: 24px; font-weight: bold; color: var(--primary); }
+        button { 
+            width: 100%; padding: 16px; background: var(--primary); color: white; 
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Trikal-Traders 🌾</h2>
+	  <label>Farmer Name</label>
+    <input type="text" name="farmerName" id="farmerName" placeholder="e.g. rahul hambe">
+    
+	<!-- <label>Commodity Name</label>
+	<input type="text" id="item" placeholder="e.g. Wheat / Soyabean"> -->
+	
+	<label for="Commodity">Commodity Name:</label>
+
+<select name="Commodity" id="Commodity">
+  <option value="maka">maka</option>
+  <option value="gahu">gahu</option>
+  <option value="kapus">kapus</option>
+  <option value="harbhara">harbhara</option>
+</select>
+
+    <label>Price (per kg)</label>
+    <input type="number" id="price" name="price"  inputmode="decimal" placeholder="0.00" oninput="calculate()">
+    
+	 <label>Weight ((in KG))</label>
+    <input type="number" id="qty"  name="qty" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+	<label>Ghat ((per Quintal))</label>
+    <input type="number" id="ghat" name="ghat" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+	<label>Hamali (per Quintal))</label>
+    <input type="number" id="hamali" name="hamali" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+	<label>Vahatuk </label>
+    <input type="number" id="vahatuk" name="vahatuk"  inputmode="decimal" placeholder="0" oninput="calculate()">
+
+    <label>Advance payment </label>
+    <input type="number" id="advancePaymnet" name="advancePaymnet"  inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+	
+    
+    <div class="total-section">
+        <div style="font-size: 14px; color: #666;">Grand Total</div>
+        <div id="total-display">₹0</div>
+    </div>
+
+    <button onclick="generatePDF()" style="background: var(--secondary); margin-bottom: 10px;">Generate PDF Bill 📄</button>
+    <button onclick="saveData()" id="submitBtn">Save </button>
+</div>
+
+<script>
+    // 🔗 PASTE YOUR GOOGLE WEB APP URL HERE
+    const scriptURL = 'YOUR_WEB_APP_URL_HERE';
+
+    function calculate() {
+        const p = parseFloat(document.getElementById('price').value) || 0;
+        const q = parseFloat(document.getElementById('qty').value) || 0;
+		const ghatCal = parseFloat(document.getElementById('ghat').value) || 0;
+		const hamaliCal = parseFloat(document.getElementById('hamali').value) || 0;
+		const vahatukCal = parseFloat(document.getElementById('vahatuk').value) || 0;
+        const advancePayCal = parseFloat(document.getElementById('advancePaymnet').value) || 0;
+		
+		
+         
+
+		const totalDetails = p * (q-((q/100)*ghatCal));
+		const hamaliDetails = hamaliCal*(q/100);
+		const vahatukDetails = vahatukCal;
+		
+		const total = totalDetails-(hamaliDetails+vahatukDetails+advancePayCal);
+		
+		
+		
+        document.getElementById('total-display').innerText = `₹${total.toLocaleString('en-IN')}`;
+        return total;
+    }
+
+ 
+
+
+async function saveData() {
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4FSkAIXZbzhPm4twGHie-iJMTDziDoFv1wWw6VcavGGSF2Zhmj08iajW7A5iQvgj/exec'; // Use the NEW URL from Step 7
+
+    const item = document.getElementById('Commodity').value;
+    const price = document.getElementById('price').value;
+    const qty = document.getElementById('qty').value;
+    const total = calculate();
+
+    // Construct the URL with parameters
+    const finalURL = `${scriptURL}?item=${encodeURIComponent(item)}&price=${price}&qty=${qty}&total=${total}`;
+
+    try {
+        // Use a simple image request or fetch to trigger the script
+        await fetch(finalURL, { mode: 'no-cors' });
+        alert("💾 Data sent successfully!");
+    } catch (e) {
+        alert("⚠️ Error sending data.");
+    }
+}
+
+
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. Get Data from Form
+    const name = document.getElementById('farmerName').value || "Guest Farmer";
+    const item = document.getElementById('Commodity').value;
+    const price = document.getElementById('price').value;
+    const qty = document.getElementById('qty').value;
+    const ghat = document.getElementById('ghat').value || 0;
+    const hamali = document.getElementById('hamali').value || 0;
+    const vahatuk = document.getElementById('vahatuk').value || 0;
+    const advancePaymnet = document.getElementById('advancePaymnet').value || 0;
+    const totalText = document.getElementById('total-display').innerText;
+
+    if(!price || !qty) {
+        alert("Please enter Price and Weight first!");
+        return;
+    }
+
+    // 2. Header
+    doc.setFontSize(22);
+    doc.setTextColor(46, 125, 50); // Green color
+    doc.text("TRIKAL-TRADE RECEIPT", 105, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Date: ${new Date().toLocaleDateString()} | Time: ${new Date().toLocaleTimeString()}`, 105, 28, { align: "center" });
+
+    // 3. Farmer Info
+    doc.setDrawColor(200);
+    doc.line(20, 35, 190, 35);
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(`Farmer Name: ${name}`, 20, 45);
+    doc.text(`Commodity: ${item.toUpperCase()}`, 20, 52);
+
+    // 4. Detailed Calculations Table
+    doc.autoTable({
+        startY: 60,
+        head: [['Description', 'Value']],
+        body: [
+            ['Rate (per KG)', `Rs. ${price}`],
+            ['Total Weight', `${qty} KG`],
+            ['Ghat (Deduction)', `${ghat}%`],
+            ['Hamali (per Quintal)', `Rs. ${hamali}`],
+            ['Vahatuk (Transport)', `Rs. ${vahatuk}`],
+            ['Advance Paymnet', `Rs. ${advancePaymnet}`]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [46, 125, 50] }
+    });
+
+    // 5. Grand Total Box
+   /* const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFillColor(232, 245, 233); // Light green background
+    doc.rect(20, finalY, 170, 20, 'F');
+    
+    doc.setFontSize(14);
+    doc.setTextColor(46, 125, 50);
+    doc.setFont("helvetica", "bold");
+    doc.text(`GRAND TOTAL: ${totalText}`, 105, finalY + 13, { align: "center" });*/
+
+    const finalY = doc.lastAutoTable.finalY + 15;
+doc.setFillColor(232, 245, 233); 
+doc.rect(20, finalY, 170, 20, 'F');
+
+// 1. Get the raw number directly from your calculation function
+const rawTotal = calculate(); 
+
+// 2. Format it manually to ensure no hidden HTML formatting/ampersands exist
+const formattedNumber = rawTotal.toLocaleString('en-IN', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
+});
+
+// 3. Construct a pure string (do not use .innerText from the HTML here)
+const totalString = "GRAND TOTAL: Rs. " + formattedNumber;
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(15);
+doc.setTextColor(46, 125, 50);
+
+// 4. Print with explicit character spacing set to zero
+doc.text(totalString, 105, finalY + 13, { 
+    align: "center",
+    charSpace: 0 
+});
+
+    // 6. Footer
+    // doc.setFontSize(9);
+    // doc.setFont("helvetica", "normal");
+    // doc.setTextColor(150);
+    // doc.text("Thank you for your business! This is a digital copy.", 105, 280, { align: "center" });
+
+    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(150);
+    
+    // Using pageHeight - 20 ensures it stays 20mm from the bottom regardless of phone screen
+    doc.text("Thank you for your business! This is a digital copy.", 105, pageHeight - 20, { align: "center" });
+
+    // 7. Download
+    doc.save(`Bill_${name}_${item}.pdf`);
+}
+</script>
+
+</body>
+</html>
