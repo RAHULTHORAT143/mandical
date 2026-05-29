@@ -118,8 +118,8 @@
  
 
 
-async function saveData2() {
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxkGtkvd6edCsi18nys5RZYcEYRWQerDq16W21jGG2lViIEdHakpVphT7v-dg2bFrM3/exec'; // Use the NEW URL from Step 7
+async function saveData() {
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4FSkAIXZbzhPm4twGHie-iJMTDziDoFv1wWw6VcavGGSF2Zhmj08iajW7A5iQvgj/exec'; // Use the NEW URL from Step 7
 
     const item = document.getElementById('Commodity').value;
     const price = document.getElementById('price').value;
@@ -135,35 +135,6 @@ async function saveData2() {
         alert("💾 Data sent successfully!");
     } catch (e) {
         alert("⚠️ Error sending data.");
-    }
-}
-
-//https://script.google.com/macros/s/AKfycbxr7IzC1PoXdQv8uOYi-uoHw5T4bOOOguoQkJeCH5uOi9kFWsy0eNRnXdjaVK2hAQnm/exec
-
-async function saveData() {
-    // 1. PASTED THE NEW URL HERE
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfvl9TCajzsApxlsXKo526-py_tuctVYDG9PBVDI5PFXXDaWIidVxXLdM8u8Bwg1ON/exec'; 
-
-    const item = document.getElementById('Commodity').value;
-    const price = document.getElementById('price').value;
-    const qty = document.getElementById('qty').value;
-    const total = calculate(); // Assumes your calculate() function is defined elsewhere
-
-    // Construct the URL with parameters
-    const finalURL = `${scriptURL}?item=${encodeURIComponent(item)}&price=${price}&qty=${qty}&total=${total}`;
-
-    try {
-        // Standard fetch without 'no-cors' so you can actually handle network errors
-        const response = await fetch(finalURL);
-        
-        if (response.ok) {
-            alert("💾 Data sent successfully!");
-        } else {
-            alert(`⚠️ Server responded with status: ${response.status}`);
-        }
-    } catch (e) {
-        console.error("Error details:", e);
-        alert("⚠️ Error sending data. Check the console for details.");
     }
 }
 
