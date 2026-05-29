@@ -1,0 +1,838 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agri-Trade Mobile Bill & Records</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --primary: #2e7d32; --secondary: #1976d2; --danger: #d32f2f; --warning: #f57c00; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 15px;
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
+            background: white; display: flex; border-top: 1px solid #ddd; z-index: 1000;
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; font-size: 12px; font-weight: 600; color: #666;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+
+        /* Page Container Switch Mechanics */
+        .page { display: none; width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; margin-bottom: 70px; }
+        .page.active-page { display: block; }
+
+        .container, .view-container { 
+            background: white; width: 100%; padding: 25px; 
+            border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); box-sizing: border-box;
+        }
+            /*        */
+        .container, .view-container { 
+            background: white; width: 100%; max-width: 400px; padding: 25px; 
+            border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); box-sizing: border-box; margin-bottom: 20px;
+        }
+        h2, h3 { text-align: center; color: var(--primary); margin-top: 0; margin-bottom: 25px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
+        input, select { 
+            width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #eee; 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--secondary); outline: none; }
+        .total-section { 
+            background: #e8f5e9; padding: 20px; border-radius: 10px; 
+            text-align: center; margin-bottom: 20px; 
+        }
+        #total-display { font-size: 24px; font-weight: bold; color: var(--primary); }
+        button { 
+            width: 100%; padding: 16px; background: var(--primary); color: white; 
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; -webkit-tap-highlight-color: transparent; margin-bottom: 10px;
+        }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        
+        /* Dynamic Multi-Action Button Management Styles */
+        #updateContainer { display: none; gap: 10px; width: 100%; }
+        #updateContainer button { flex: 1; }
+
+        /* Card-based Responsive Grid View for Records */
+        .record-card {
+            background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px;
+            padding: 15px; margin-bottom: 15px; font-size: 14px; position: relative;
+        }
+        .record-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 5px; }
+        .record-meta { color: #666; margin-bottom: 10px; }
+        .record-total { font-weight: bold; color: var(--primary); font-size: 16px; margin-bottom: 12px; }
+        .card-actions { display: flex; gap: 8px; }
+        .card-actions button { padding: 8px; font-size: 14px; border-radius: 6px; margin-bottom: 0; }
+        .btn-edit { background: var(--warning); }
+        .btn-delete { background: var(--danger); }
+        .btn-refresh { background: #616161; font-size: 14px; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Trikal-Traders 🌾</h2>
+    
+    <input type="hidden" id="currentId">
+
+    <label>Farmer Name</label>
+    <input type="text" id="farmerName" placeholder="e.g. rahul hambe">
+    
+    <label for="Commodity">Commodity Name:</label>
+    <select id="Commodity">
+      <option value="maka">maka</option>
+      <option value="gahu">gahu</option>
+      <option value="kapus">kapus</option>
+      <option value="harbhara">harbhara</option>
+    </select>
+
+    <label>Price (per kg)</label>
+    <input type="number" id="price" inputmode="decimal" placeholder="0.00" oninput="calculate()">
+    
+    <label>Weight (in KG)</label>
+    <input type="number" id="qty" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+    <label>Ghat (per Quintal)</label>
+    <input type="number" id="ghat" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+    <label>Hamali (per Quintal)</label>
+    <input type="number" id="hamali" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+    <label>Vahatuk </label>
+    <input type="number" id="vahatuk" inputmode="decimal" placeholder="0" oninput="calculate()">
+
+    <label>Advance payment </label>
+    <input type="number" id="advancePaymnet" inputmode="decimal" placeholder="0" oninput="calculate()">
+	
+    <div class="total-section">
+        <div style="font-size: 14px; color: #666;">Grand Total</div>
+        <div id="total-display">₹0</div>
+    </div>
+
+    <button onclick="generatePDF()" style="background: var(--secondary);">Generate PDF Bill 📄</button>
+    
+    <button onclick="handleSave()" id="submitBtn">Save Record</button>
+    <div id="updateContainer">
+            <button onclick="handleUpdate()" style="background: var(--warning);">Confirm Update</button>
+            <button onclick="cancelEdit()" style="background: #9e9e9e;">Cancel</button>
+        </div>
+    <div class="bottom-nav">
+        <div class="nav-item active" id="navForm" onclick="switchPage('form')">
+            <div class="nav-icon">📝</div>
+            <div>Billing Form</div>
+        </div>
+        <div class="nav-item" id="navRecords" onclick="switchPage('records')">
+            <div class="nav-icon">📁</div>
+            <div>View Records</div>
+        </div>
+        </div
+    </div>
+
+
+
+<script>
+    // ⚠️ REPLACE THIS STRING WITH YOUR REDEPLOYED WEB APP EXECUTION LINK
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfvl9TCajzsApxlsXKo526-py_tuctVYDG9PBVDI5PFXXDaWIidVxXLdM8u8Bwg1ON/exec'; 
+    let cachedRecords = [];
+
+    function calculate() {
+        const p = parseFloat(document.getElementById('price').value) || 0;
+        const q = parseFloat(document.getElementById('qty').value) || 0;
+        const ghatCal = parseFloat(document.getElementById('ghat').value) || 0;
+        const hamaliCal = parseFloat(document.getElementById('hamali').value) || 0;
+        const vahatukCal = parseFloat(document.getElementById('vahatuk').value) || 0;
+        const advancePayCal = parseFloat(document.getElementById('advancePaymnet').value) || 0;
+
+        const totalDetails = p * (q - ((q / 100) * ghatCal));
+        const hamaliDetails = hamaliCal * (q / 100);
+        const vahatukDetails = vahatukCal;
+		
+        const total = totalDetails - (hamaliDetails + vahatukDetails + advancePayCal);
+		
+        document.getElementById('total-display').innerText = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        return total;
+    }
+
+    // switch page and load data logic 
+
+    function switchPage(pageName) {
+        document.getElementById('formPage').classList.remove('active-page');
+        document.getElementById('recordsPage').classList.remove('active-page');
+        document.getElementById('navForm').classList.remove('active');
+        document.getElementById('navRecords').classList.remove('active');
+
+        if (pageName === 'form') {
+            document.getElementById('formPage').classList.add('active-page');
+            document.getElementById('navForm').classList.add('active');
+        } else if (pageName === 'records') {
+            document.getElementById('recordsPage').classList.add('active-page');
+            document.getElementById('navRecords').classList.add('active');
+            loadTableData(); // Automatically fetch the latest data from the sheet when switching views
+        }
+    }
+
+    // Master API Communication Bridge
+    async function executeApi(payload) {
+        try {
+            const response = await fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        } catch(e) {
+            console.error("Transmission breakdown: ", e);
+            alert("⚠️ API network request failed.");
+        }
+    }
+
+    // CREATE ACTION
+    async function handleSave() {
+        const payload = collectFormData();
+        if(!payload.farmerName || !payload.price || !payload.qty) {
+            alert("⚠️ Farmer Name, Price, and Weight are explicitly required!");
+            return;
+        }
+        
+        payload.action = "create";
+        payload.id = "id_" + new Date().getTime(); // Build safe primary key token
+
+        const res = await executeApi(payload);
+        if(res && res.status === "success") {
+            alert(res.message);
+            clearForm();
+            loadTableData();
+        }
+    }
+
+    // READ ACTION
+    async function loadTableData() {
+        const viewEl = document.getElementById('recordsContainer');
+        viewEl.innerHTML = `<p style="text-align: center; color: #777;">Fetching database entries...</p>`;
+        
+        const res = await executeApi({ action: "read" });
+        if(res && res.status === "success") {
+            cachedRecords = res.data;
+            renderMobileCards(res.data);
+        }
+    }
+
+    // Build cleaner Mobile-Friendly UI cards instead of squished tables
+    function renderMobileCards(records) {
+        const container = document.getElementById('recordsContainer');
+        if(!records || records.length === 0) {
+            container.innerHTML = `<p style="text-align: center; color: #777;">No transaction history found.</p>`;
+            return;
+        }
+
+        container.innerHTML = records.map(row => `
+            <div class="record-card">
+                <div class="record-title">${row.farmerName}</div>
+                <div class="record-meta">🌾 ${row.item.toUpperCase()} | Qty: ${row.qty} KG | Rate: ₹${row.price}</div>
+                <div class="record-total">Total Pay: ₹${parseFloat(row.total).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="initiateEdit('${row.id}')">Edit</button>
+                    <button class="btn-delete" onclick="handleDelete('${row.id}')">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // INITIALIZE EDIT ROUTER
+    function initiateEdit(id) {
+        const target = cachedRecords.find(r => r.id === id);
+        if(!target) return;
+
+        // Map cached record data fields accurately into the UI input fields
+        document.getElementById('currentId').value = target.id;
+        document.getElementById('farmerName').value = target.farmerName;
+        document.getElementById('Commodity').value = target.item;
+        document.getElementById('price').value = target.price;
+        document.getElementById('qty').value = target.qty;
+        document.getElementById('ghat').value = target.ghat;
+        document.getElementById('hamali').value = target.hamali;
+        document.getElementById('vahatuk').value = target.vahatuk;
+        document.getElementById('advancePaymnet').value = target.advancePayment;
+
+        calculate(); // Force recalculation update across visual boards
+
+        // Swap out form button interfaces smoothly
+        document.getElementById('submitBtn').style.display = "none";
+        document.getElementById('updateContainer').style.display = "flex";
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back up to edit form
+    }
+
+    // UPDATE ACTION
+    async function handleUpdate() {
+        const payload = collectFormData();
+        payload.action = "update";
+        payload.id = document.getElementById('currentId').value;
+
+        const res = await executeApi(payload);
+        if(res && res.status === "success") {
+            alert(res.message);
+            cancelEdit();
+            loadTableData();
+        }
+    }
+
+    // DELETE ACTION
+    async function handleDelete(id) {
+        if(!confirm("Are you absolutely sure you want to permanently delete this billing file?")) return;
+        
+        const res = await executeApi({ action: "delete", id: id });
+        if(res && res.status === "success") {
+            alert(res.message);
+            loadTableData();
+        }
+    }
+
+    function collectFormData() {
+        return {
+            farmerName: document.getElementById('farmerName').value.trim(),
+            item: document.getElementById('Commodity').value,
+            price: parseFloat(document.getElementById('price').value) || 0,
+            qty: parseFloat(document.getElementById('qty').value) || 0,
+            ghat: parseFloat(document.getElementById('ghat').value) || 0,
+            hamali: parseFloat(document.getElementById('hamali').value) || 0,
+            vahatuk: parseFloat(document.getElementById('vahatuk').value) || 0,
+            advancePayment: parseFloat(document.getElementById('advancePaymnet').value) || 0,
+            total: calculate()
+        };
+    }
+
+    function cancelEdit() {
+        clearForm();
+        document.getElementById('submitBtn').style.display = "block";
+        document.getElementById('updateContainer').style.display = "none";
+    }
+
+    function clearForm() {
+        document.getElementById('currentId').value = "";
+        document.getElementById('farmerName').value = "";
+        document.getElementById('price').value = "";
+        document.getElementById('qty').value = "";
+        document.getElementById('ghat').value = "";
+        document.getElementById('hamali').value = "";
+        document.getElementById('vahatuk').value = "";
+        document.getElementById('advancePaymnet').value = "";
+        document.getElementById('total-display').innerText = "₹0.00";
+    }
+
+    // Standard high-fidelity execution targeting custom PDF builds
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const name = document.getElementById('farmerName').value || "Guest Farmer";
+        const item = document.getElementById('Commodity').value;
+        const price = document.getElementById('price').value;
+        const qty = document.getElementById('qty').value;
+        const ghat = document.getElementById('ghat').value || 0;
+        const hamali = document.getElementById('hamali').value || 0;
+        const vahatuk = document.getElementById('vahatuk').value || 0;
+        const advancePaymnet = document.getElementById('advancePaymnet').value || 0;
+
+        if(!price || !qty) {
+            alert("Please enter Price and Weight first!");
+            return;
+        }
+
+        doc.setFontSize(22);
+        doc.setTextColor(46, 125, 50); 
+        doc.text("TRIKAL-TRADE RECEIPT", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Date: ${new Date().toLocaleDateString()} | Time: ${new Date().toLocaleTimeString()}`, 105, 28, { align: "center" });
+
+        doc.setDrawColor(200);
+        doc.line(20, 35, 190, 35);
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text(`Farmer Name: ${name}`, 20, 45);
+        doc.text(`Commodity: ${item.toUpperCase()}`, 20, 52);
+
+        doc.autoTable({
+            startY: 60,
+            head: [['Description', 'Value']],
+            body: [
+                ['Rate (per KG)', `Rs. ${price}`],
+                ['Total Weight', `${qty} KG`],
+                ['Ghat (Deduction)', `${ghat}%`],
+                ['Hamali (per Quintal)', `Rs. ${hamali}`],
+                ['Vahatuk (Transport)', `Rs. ${vahatuk}`],
+                ['Advance Payment', `Rs. ${advancePaymnet}`]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [46, 125, 50] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFillColor(232, 245, 233); 
+        doc.rect(20, finalY, 170, 20, 'F');
+
+        const rawTotal = calculate(); 
+        const formattedNumber = rawTotal.toLocaleString('en-IN', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2
+        });
+
+        const totalString = "GRAND TOTAL: Rs. " + formattedNumber;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(46, 125, 50);
+
+        doc.text(totalString, 105, finalY + 13, { 
+            align: "center",
+            charSpace: 0 
+        });
+
+        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(150);
+        doc.text("Thank you for your business! This is a digital copy.", 105, pageHeight - 20, { align: "center" });
+
+        doc.save(`Bill_${name}_${item}.pdf`);
+    }
+
+    // Automated initialization run sequence 
+    window.onload = loadTableData;
+</script>
+
+</body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agri-Trade Mobile Bill & Records</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --primary: #2e7d32; --secondary: #1976d2; --danger: #d32f2f; --warning: #f57c00; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #f0f2f5; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; pb: 80px; /* Space for bottom navigation */
+        }
+        
+        /* Bottom Navigation Bar Styles */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
+            background: white; display: flex; border-top: 1px solid #ddd; z-index: 1000;
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; font-size: 12px; font-weight: 600; color: #666;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+
+        /* Page Container Switch Mechanics */
+        .page { display: none; width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; margin-bottom: 70px; }
+        .page.active-page { display: block; }
+
+        .container, .view-container { 
+            background: white; width: 100%; padding: 25px; 
+            border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); box-sizing: border-box;
+        }
+        h2, h3 { text-align: center; color: var(--primary); margin-top: 0; margin-bottom: 25px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #444; }
+        input, select { 
+            width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #eee; 
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--secondary); outline: none; }
+        .total-section { 
+            background: #e8f5e9; padding: 20px; border-radius: 10px; 
+            text-align: center; margin-bottom: 20px; 
+        }
+        #total-display { font-size: 24px; font-weight: bold; color: var(--primary); }
+        button { 
+            width: 100%; padding: 16px; background: var(--primary); color: white; 
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; -webkit-tap-highlight-color: transparent; margin-bottom: 10px;
+        }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        
+        #updateContainer { display: none; gap: 10px; width: 100%; }
+        #updateContainer button { flex: 1; }
+
+        /* Clickable Record Layout Row Designs */
+        .record-card {
+            background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px;
+            padding: 15px; margin-bottom: 15px; font-size: 14px; position: relative;
+            cursor: pointer; transition: 0.2s;
+        }
+        .record-card:active { background: #f0f0f0; }
+        .record-title { font-weight: bold; font-size: 17px; color: var(--secondary); margin-bottom: 5px; text-decoration: underline; }
+        .record-meta { color: #666; margin-bottom: 10px; }
+        .record-total { font-weight: bold; color: var(--primary); font-size: 16px; }
+        .btn-refresh { background: #616161; font-size: 14px; padding: 10px; }
+        .delete-icon-btn {
+            position: absolute; right: 15px; bottom: 15px; background: var(--danger);
+            color: white; width: auto; padding: 6px 12px; font-size: 13px; border-radius: 6px; margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="formPage" class="page active-page">
+    <div class="container">
+        <h2 id="formHeader">New Bill 🌾</h2>
+        
+        <input type="hidden" id="currentId">
+
+        <label>Farmer Name</label>
+        <input type="text" id="farmerName" placeholder="e.g. rahul hambe">
+        
+        <label for="Commodity">Commodity Name:</label>
+        <select id="Commodity">
+          <option value="maka">maka</option>
+          <option value="kapus">kapus</option>
+          <option value="soyabean">soyabean</option>
+          <option value="tur">tur</option>
+          <option value="khapali_gahu">khapali gahu</option>
+          <option value="gahu">gahu</option>
+          <option value="kapus">kapus</option>
+          <option value="harbhara">harbhara</option>
+        </select>
+
+        <label>Price (per kg)</label>
+        <input type="number" id="price" inputmode="decimal" placeholder="0.00" oninput="calculate()">
+        
+        <label>Weight (in KG)</label>
+        <input type="number" id="qty" inputmode="decimal" placeholder="0" oninput="calculate()">
+        
+        <label>Ghat (per Quintal)</label>
+        <input type="number" id="ghat" inputmode="decimal" placeholder="0" oninput="calculate()">
+        
+        <label>Hamali (per Quintal)</label>
+        <input type="number" id="hamali" inputmode="decimal" placeholder="0" oninput="calculate()">
+        
+        <label>Vahatuk </label>
+        <input type="number" id="vahatuk" inputmode="decimal" placeholder="0" oninput="calculate()">
+
+        <label>Advance payment </label>
+        <input type="number" id="advancePaymnet" inputmode="decimal" placeholder="0" oninput="calculate()">
+        
+        <div class="total-section">
+            <div style="font-size: 14px; color: #666;">Grand Total</div>
+            <div id="total-display">₹0</div>
+        </div>
+
+        <button onclick="generatePDF()" style="background: var(--secondary);">Generate PDF Bill 📄</button>
+        
+        <button onclick="handleSave()" id="submitBtn">Save Record</button>
+        
+        <div id="updateContainer">
+            <button onclick="handleUpdate()" style="background: var(--warning);">Confirm Update</button>
+            <button onclick="cancelEdit()" style="background: #9e9e9e;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="recordsPage" class="page">
+    <div class="view-container">
+        <h3>Saved Bills Directory</h3>
+        <button class="btn-refresh" onclick="loadTableData()">🔄 Refresh Directory List</button>
+        <p style="font-size: 12px; color: #777; text-align: center; margin-top: 5px;">💡 Click on a farmer's name to edit their record.</p>
+        <div id="recordsContainer" style="margin-top: 15px;">
+            <p style="text-align: center; color: #777;">Loading data directory...</p>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <div class="nav-item active" id="navForm" onclick="switchPage('form')">
+        <div class="nav-icon">📝</div>
+        <div>Billing Form</div>
+    </div>
+    <div class="nav-item" id="navRecords" onclick="switchPage('records')">
+        <div class="nav-icon">📁</div>
+        <div>View Records</div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ ENSURE THIS IS INSTANTIATED WITH YOUR LATEST DEPLOYED GOOGLE APPS SCRIPT URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfvl9TCajzsApxlsXKo526-py_tuctVYDG9PBVDI5PFXXDaWIidVxXLdM8u8Bwg1ON/exec'; 
+    let cachedRecords = [];
+
+    // Navigation Router Logic
+    function switchPage(pageName) {
+        document.getElementById('formPage').classList.remove('active-page');
+        document.getElementById('recordsPage').classList.remove('active-page');
+        document.getElementById('navForm').classList.remove('active');
+        document.getElementById('navRecords').classList.remove('active');
+
+        if (pageName === 'form') {
+            document.getElementById('formPage').classList.add('active-page');
+            document.getElementById('navForm').classList.add('active');
+        } else if (pageName === 'records') {
+            document.getElementById('recordsPage').classList.add('active-page');
+            document.getElementById('navRecords').classList.add('active');
+            loadTableData(); // Automatically fetch the latest data from the sheet when switching views
+        }
+    }
+
+    function calculate() {
+        const p = parseFloat(document.getElementById('price').value) || 0;
+        const q = parseFloat(document.getElementById('qty').value) || 0;
+        const ghatCal = parseFloat(document.getElementById('ghat').value) || 0;
+        const hamaliCal = parseFloat(document.getElementById('hamali').value) || 0;
+        const vahatukCal = parseFloat(document.getElementById('vahatuk').value) || 0;
+        const advancePayCal = parseFloat(document.getElementById('advancePaymnet').value) || 0;
+
+        const totalDetails = p * (q - ((q / 100) * ghatCal));
+        const hamaliDetails = hamaliCal * (q / 100);
+        const vahatukDetails = vahatukCal;
+        
+        const total = totalDetails - (hamaliDetails + vahatukDetails + advancePayCal);
+        
+        document.getElementById('total-display').innerText = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        return total;
+    }
+
+    async function executeApi(payload) {
+        try {
+            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            return await response.json();
+        } catch(e) {
+            console.error(e);
+            alert("⚠️ API network communication failure.");
+        }
+    }
+
+    // CREATE ACTION
+    async function handleSave() {
+        const payload = collectFormData();
+        if(!payload.farmerName || !payload.price || !payload.qty) {
+            alert("⚠️ Farmer Name, Price, and Weight are required fields!");
+            return;
+        }
+        
+        payload.action = "create";
+        payload.id = "id_" + new Date().getTime();
+
+        const res = await executeApi(payload);
+        if(res && res.status === "success") {
+            alert(res.message);
+            clearForm();
+            switchPage('records'); // Take user to directory directly to view the entry
+        }
+    }
+
+    // READ ACTION
+    async function loadTableData() {
+        const viewEl = document.getElementById('recordsContainer');
+        viewEl.innerHTML = `<p style="text-align: center; color: #777;">Fetching database entries...</p>`;
+        
+        const res = await executeApi({ action: "read" });
+        if(res && res.status === "success") {
+            cachedRecords = res.data;
+            renderMobileCards(res.data);
+        }
+    }
+
+    function renderMobileCards(records) {
+        const container = document.getElementById('recordsContainer');
+        if(!records || records.length === 0) {
+            container.innerHTML = `<p style="text-align: center; color: #777;">No history records found.</p>`;
+            return;
+        }
+
+        container.innerHTML = records.map(row => `
+            <div class="record-card">
+                <div class="record-title" onclick="initiateEdit('${row.id}')">${row.farmerName} 📝</div>
+                <div class="record-meta" onclick="initiateEdit('${row.id}')">🌾 ${row.item.toUpperCase()} | Qty: ${row.qty} KG | Rate: ₹${row.price}</div>
+                <div class="record-total" onclick="initiateEdit('${row.id}')">Total Pay: ₹${parseFloat(row.total).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+                
+            </div>
+        `).join('');
+    }
+
+    // MAP CHOSEN ENTRY DATA VALUES BACK INTO INPUT INTERFACES
+    function initiateEdit(id) {
+        const target = cachedRecords.find(r => r.id === id);
+        if(!target) return;
+
+        document.getElementById('currentId').value = target.id;
+        document.getElementById('farmerName').value = target.farmerName;
+        document.getElementById('Commodity').value = target.item;
+        document.getElementById('price').value = target.price;
+        document.getElementById('qty').value = target.qty;
+        document.getElementById('ghat').value = target.ghat;
+        document.getElementById('hamali').value = target.hamali;
+        document.getElementById('vahatuk').value = target.vahatuk;
+        document.getElementById('advancePaymnet').value = target.advancePayment;
+
+        calculate(); 
+
+        // Adjust form page header to show we are in edit mode
+        document.getElementById('formHeader').innerText = "Modify Record 📝";
+        document.getElementById('submitBtn').style.display = "none";
+        document.getElementById('updateContainer').style.display = "flex";
+        
+        // Take them automatically back to the input form page view
+        switchPage('form');
+    }
+
+    // UPDATE ACTION
+    async function handleUpdate() {
+        const payload = collectFormData();
+        payload.action = "update";
+        payload.id = document.getElementById('currentId').value;
+
+        const res = await executeApi(payload);
+        if(res && res.status === "success") {
+            alert(res.message);
+            cancelEdit();
+            switchPage('records');
+        }
+    }
+
+    // DELETE ACTION
+    async function handleDelete(event, id) {
+        event.stopPropagation(); // Stops the card click event (edit handler) from firing
+        if(!confirm("Are you sure you want to permanently delete this billing file?")) return;
+        
+        const res = await executeApi({ action: "delete", id: id });
+        if(res && res.status === "success") {
+            alert(res.message);
+            loadTableData();
+        }
+    }
+
+    function collectFormData() {
+        return {
+            farmerName: document.getElementById('farmerName').value.trim(),
+            item: document.getElementById('Commodity').value,
+            price: parseFloat(document.getElementById('price').value) || 0,
+            qty: parseFloat(document.getElementById('qty').value) || 0,
+            ghat: parseFloat(document.getElementById('ghat').value) || 0,
+            hamali: parseFloat(document.getElementById('hamali').value) || 0,
+            vahatuk: parseFloat(document.getElementById('vahatuk').value) || 0,
+            advancePayment: parseFloat(document.getElementById('advancePaymnet').value) || 0,
+            total: calculate()
+        };
+    }
+
+    function cancelEdit() {
+        clearForm();
+        document.getElementById('formHeader').innerText = "New Bill 🌾";
+        document.getElementById('submitBtn').style.display = "block";
+        document.getElementById('updateContainer').style.display = "none";
+    }
+
+    function clearForm() {
+        document.getElementById('currentId').value = "";
+        document.getElementById('farmerName').value = "";
+        document.getElementById('price').value = "";
+        document.getElementById('qty').value = "";
+        document.getElementById('ghat').value = "";
+        document.getElementById('hamali').value = "";
+        document.getElementById('vahatuk').value = "";
+        document.getElementById('advancePaymnet').value = "";
+        document.getElementById('total-display').innerText = "₹0.00";
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const name = document.getElementById('farmerName').value || "Guest Farmer";
+        const item = document.getElementById('Commodity').value;
+        const price = document.getElementById('price').value;
+        const qty = document.getElementById('qty').value;
+        const ghat = document.getElementById('ghat').value || 0;
+        const hamali = document.getElementById('hamali').value || 0;
+        const vahatuk = document.getElementById('vahatuk').value || 0;
+        const advancePaymnet = document.getElementById('advancePaymnet').value || 0;
+
+        if(!price || !qty) {
+            alert("Please enter Price and Weight first!");
+            return;
+        }
+
+        doc.setFontSize(22);
+        doc.setTextColor(46, 125, 50); 
+        doc.text("TRIKAL-TRADE RECEIPT", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Date: ${new Date().toLocaleDateString()} | Time: ${new Date().toLocaleTimeString()}`, 105, 28, { align: "center" });
+
+        doc.setDrawColor(200);
+        doc.line(20, 35, 190, 35);
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text(`Farmer Name: ${name}`, 20, 45);
+        doc.text(`Commodity: ${item.toUpperCase()}`, 20, 52);
+
+        doc.autoTable({
+            startY: 60,
+            head: [['Description', 'Value']],
+            body: [
+                ['Rate (per KG)', `Rs. ${price}`],
+                ['Total Weight', `${qty} KG`],
+                ['Ghat (Deduction)', `${ghat}%`],
+                ['Hamali (per Quintal)', `Rs. ${hamali}`],
+                ['Vahatuk (Transport)', `Rs. ${vahatuk}`],
+                ['Advance Payment', `Rs. ${advancePaymnet}`]
+            ],
+            theme: 'striped',
+            headStyles: { fillColor: [46, 125, 50] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFillColor(232, 245, 233); 
+        doc.rect(20, finalY, 170, 20, 'F');
+
+        const rawTotal = calculate(); 
+        const formattedNumber = rawTotal.toLocaleString('en-IN', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2
+        });
+
+        const totalString = "GRAND TOTAL: Rs. " + formattedNumber;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(46, 125, 50);
+        doc.text(totalString, 105, finalY + 13, { align: "center", charSpace: 0 });
+
+        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(150);
+        doc.text("Thank you for your business! This is a digital copy.", 105, pageHeight - 20, { align: "center" });
+
+        doc.save(`Bill_${name}_${item}.pdf`);
+    }
+
+    // Auto-load on setup mount
+    window.onload = function() {
+        calculate();
+    };
+</script>
+</body>
+</html>
